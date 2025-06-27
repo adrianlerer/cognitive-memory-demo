@@ -248,10 +248,12 @@ async def chat(request: ChatRequest, x_api_key: str = Header(None)):
         
         # Store the user message
         async with db_pool.acquire() as conn:
+            # Convert embedding list to pgvector format string
+            embedding_str = f"[{','.join(map(str, embedding))}]"
             await conn.execute("""
                 INSERT INTO messages (conversation_id, role, content, embedding)
-                VALUES ($1::UUID, $2, $3, $4)
-            """, request.conversation_id, "user", request.message, embedding)
+                VALUES ($1::UUID, $2, $3, $4::vector)
+            """, request.conversation_id, "user", request.message, embedding_str)
         
         # Get recent messages
         recent_messages = await get_recent_messages(request.conversation_id)
@@ -321,11 +323,13 @@ Tu mensaje: "{request.message}"
         
         # Store assistant response
         assistant_embedding = await get_embedding(assistant_response)
+        # Convert embedding to pgvector format
+        assistant_embedding_str = f"[{','.join(map(str, assistant_embedding))}]"
         async with db_pool.acquire() as conn:
             await conn.execute("""
                 INSERT INTO messages (conversation_id, role, content, embedding)
-                VALUES ($1::UUID, $2, $3, $4)
-            """, request.conversation_id, "assistant", assistant_response, assistant_embedding)
+                VALUES ($1::UUID, $2, $3, $4::vector)
+            """, request.conversation_id, "assistant", assistant_response, assistant_embedding_str)
             
             # Store metrics
             await conn.execute("""
