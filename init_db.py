@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 Initialize database tables for Cognitive Memory System
+Copyright (c) 2025 IntegridAI. All rights reserved.
+
+This file is part of the Cognitive Memory System.
+Licensed under MIT License for open source components.
+
 Run this script to create all necessary tables and extensions
 """
 import asyncio

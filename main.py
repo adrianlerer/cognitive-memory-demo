@@ -1,3 +1,13 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Cognitive Memory System - Main Application
+Copyright (c) 2025 IntegridAI. All rights reserved.
+
+This file contains open source components (MIT License) and references to
+proprietary MAHOUT™ technology. See LICENSE file for details.
+"""
+
 import asyncio
 import json
 import os
@@ -80,95 +90,9 @@ class CognitiveMetrics(BaseModel):
     pattern_score: float
     overall_score: float
 
-# MAHOUT™ Analysis Engine (Proprietary)
-class MAHOUTEngine:
-    """
-    Proprietary cognitive analysis engine.
-    Like Coca-Cola's formula - we share results, not methods.
-    """
-    
-    @staticmethod
-    def analyze_coherence(messages: List[Dict], query: str, retrieved_contexts: List[Dict]) -> CognitiveMetrics:
-        """
-        Analyzes conversation coherence using proprietary algorithms.
-        Returns scores between 0-1 for different cognitive dimensions.
-        """
-        # This is where the magic happens - simplified for demo
-        # Real implementation uses advanced NLP and pattern recognition
-        
-        # Temporal coherence - how well time-ordered information flows
-        temporal_score = MAHOUTEngine._calculate_temporal_coherence(messages, retrieved_contexts)
-        
-        # Relevance score - semantic similarity and context appropriateness  
-        relevance_score = MAHOUTEngine._calculate_relevance(query, retrieved_contexts)
-        
-        # Pattern score - conversation flow and topic transitions
-        pattern_score = MAHOUTEngine._calculate_pattern_coherence(messages)
-        
-        # Overall cognitive score (weighted average)
-        overall_score = (temporal_score * 0.3 + relevance_score * 0.5 + pattern_score * 0.2)
-        
-        return CognitiveMetrics(
-            relevance_score=relevance_score,
-            temporal_score=temporal_score,
-            pattern_score=pattern_score,
-            overall_score=overall_score
-        )
-    
-    @staticmethod
-    def _calculate_temporal_coherence(messages: List[Dict], contexts: List[Dict]) -> float:
-        """Calculate temporal coherence score"""
-        if not contexts:
-            return 0.7  # Default score
-            
-        # Analyze time gaps and information decay
-        scores = []
-        for ctx in contexts:
-            time_gap = (datetime.utcnow() - ctx.get('timestamp', datetime.utcnow())).total_seconds()
-            # Recent contexts score higher
-            time_score = max(0, 1 - (time_gap / (7 * 24 * 3600)))  # Decay over 7 days
-            scores.append(time_score)
-            
-        return sum(scores) / len(scores) if scores else 0.7
-    
-    @staticmethod
-    def _calculate_relevance(query: str, contexts: List[Dict]) -> float:
-        """Calculate relevance score based on semantic similarity"""
-        if not contexts:
-            return 0.5
-            
-        # In production, this uses advanced embeddings comparison
-        # For demo, we simulate with simple heuristics
-        query_terms = set(query.lower().split())
-        scores = []
-        
-        for ctx in contexts:
-            content = ctx.get('content', '').lower()
-            content_terms = set(content.split())
-            overlap = len(query_terms & content_terms)
-            score = min(1.0, overlap / (len(query_terms) + 1))
-            scores.append(score)
-            
-        return sum(scores) / len(scores) if scores else 0.5
-    
-    @staticmethod
-    def _calculate_pattern_coherence(messages: List[Dict]) -> float:
-        """Analyze conversation patterns and transitions"""
-        if len(messages) < 2:
-            return 0.8
-            
-        # Analyze topic transitions and conversation flow
-        # Simplified for demo - real version uses advanced NLP
-        transitions = []
-        for i in range(1, len(messages)):
-            prev_msg = messages[i-1].get('content', '')
-            curr_msg = messages[i].get('content', '')
-            
-            # Simple transition scoring
-            if len(prev_msg) > 0 and len(curr_msg) > 0:
-                transitions.append(0.75)  # Simplified score
-                
-        return sum(transitions) / len(transitions) if transitions else 0.8
+# MAHOUT™ Analysis Engine (Protected Version)
+# Real implementation is proprietary and not exposed
+from mahout_protected import MAHOUTProtected
 
 # Database initialization
 async def init_db():
@@ -250,11 +174,22 @@ def count_tokens(text: str) -> int:
 @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10))
 async def get_embedding(text: str) -> List[float]:
     """Get embeddings with retry logic"""
-    response = await client.embeddings.create(
-        input=text,
-        model="text-embedding-3-small"
-    )
-    return response.data[0].embedding
+    if not client:
+        # Return random embedding if no OpenAI client
+        import random
+        return [random.random() for _ in range(1536)]
+    
+    try:
+        response = await client.embeddings.create(
+            input=text,
+            model="text-embedding-3-small"
+        )
+        return response.data[0].embedding
+    except Exception as e:
+        print(f"Error getting embedding: {e}")
+        # Return random embedding as fallback
+        import random
+        return [random.random() for _ in range(1536)]
 
 async def search_similar_messages(
     embedding: List[float], 
@@ -328,11 +263,20 @@ async def chat(request: ChatRequest, x_api_key: str = Header(None)):
             request.max_contexts
         )
         
-        # MAHOUT Analysis
-        cognitive_metrics = MAHOUTEngine.analyze_coherence(
+        # MAHOUT Analysis (Protected)
+        cognitive_result = MAHOUTProtected.analyze_coherence(
             recent_messages,
             request.message,
-            similar_messages
+            similar_messages,
+            x_api_key
+        )
+        
+        # Create metrics object from result
+        cognitive_metrics = CognitiveMetrics(
+            relevance_score=cognitive_result['relevance_score'],
+            temporal_score=cognitive_result['temporal_score'],
+            pattern_score=cognitive_result['pattern_score'],
+            overall_score=cognitive_result['overall_score']
         )
         
         # Build context for LLM

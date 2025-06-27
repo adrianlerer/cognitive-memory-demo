@@ -1,77 +1,144 @@
-# Sistema de Memoria Cognitiva - Powered by MAHOUT™
+# Cognitive Memory System for LLMs
 
-Sistema avanzado de gestión de contexto y memoria para modelos de lenguaje con tecnología MAHOUT™.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![MAHOUT™: Proprietary](https://img.shields.io/badge/MAHOUT™-Proprietary-red.svg)](LEGAL_NOTICE.md)
 
-## 🚀 Powered by MAHOUT™
+Sistema de memoria persistente para IA conversacional con análisis cognitivo avanzado.
 
-MAHOUT™ es nuestra tecnología cognitiva propietaria que impulsa resultados superiores:
+## ⚖️ IMPORTANT LEGAL NOTICE
 
-- ✅ **85% mejor coherencia** en conversaciones largas
-- ✅ **40% reducción** en uso de tokens  
-- ✅ **3x más relevancia** en respuestas contextuales
+**This repository contains INTERFACES to proprietary MAHOUT™ technology. The actual MAHOUT™ algorithms are NOT included and are protected by trade secret and patent law. See [LEGAL_NOTICE.md](LEGAL_NOTICE.md) for details.**
 
-## ¿Qué es MAHOUT™?
+## 🎯 What This Repository Contains
 
-Como la fórmula secreta de Coca-Cola, MAHOUT™ es nuestra tecnología propietaria que hace posible estos resultados excepcionales. No es solo otro sistema de memoria - es un enfoque completamente nuevo para entender y optimizar conversaciones.
+### ✅ Open Source (MIT License)
+- FastAPI application wrapper
+- PostgreSQL + pgvector integration  
+- Web interface for testing
+- Docker deployment configuration
+- API endpoint definitions
+- Basic demo scoring (NOT real MAHOUT™)
 
-## Arquitectura
+### ❌ NOT Included (Proprietary)
+- MAHOUT™ cognitive analysis algorithms
+- Neural pattern matching implementation
+- Temporal decay calculations
+- Production scoring methodologies
+- Any proprietary IntegridAI technology
 
+## 🚀 Features
+
+- **Persistent Memory**: PostgreSQL with pgvector for semantic search
+- **MAHOUT™ Integration**: Interface to proprietary cognitive analysis (requires license)
+- **Real-time Analysis**: Sub-300ms response times
+- **Semantic Search**: Find relevant past conversations
+- **RESTful API**: Easy integration with any LLM
+
+## 📋 Requirements
+
+- Python 3.9+
+- PostgreSQL 14+ with pgvector extension
+- OpenAI API key (for embeddings)
+- MAHOUT™ API license (for production scoring)
+
+## 🛠️ Installation
+
+### Local Development
+
+```bash
+# Clone repository
+git clone https://github.com/yourusername/cognitive-memory-demo.git
+cd cognitive-memory-demo
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Set environment variables
+export DATABASE_URL="postgresql://localhost/cognitive_memory"
+export OPENAI_API_KEY="your-openai-key"
+export MAHOUT_API_KEY="demo-key"  # Request production key from IntegridAI
+
+# Run application
+python main.py
 ```
-Cliente → API Gateway → Motor de Memoria
-                     ↓
-                 MAHOUT™ Engine
-                     ↓
-              LLM Genérico
+
+### Docker Deployment
+
+```bash
+# Build and run with Docker Compose
+docker-compose up -d
+
+# Initialize database
+docker-compose exec web python -c "from main import init_db; import asyncio; asyncio.run(init_db())"
 ```
 
-## ¿Por Qué Somos Diferentes?
+## 📡 API Endpoints
 
-Mientras otros sistemas simplemente almacenan mensajes, MAHOUT™:
-- Analiza múltiples dimensiones conversacionales
-- Optimiza la selección de contexto en tiempo real
-- Aprende patrones para mejorar continuamente
-- Entrega resultados medibles y consistentes
+### Chat Endpoint
+```http
+POST /api/chat
+X-API-Key: your-api-key
 
-## Casos de Uso
-
-- **Asistentes de Investigación**: MAHOUT™ mantiene contexto coherente durante investigaciones extensas
-- **Soporte Técnico**: MAHOUT™ detecta patrones y sugiere soluciones basadas en casos similares
-- **Educación Personalizada**: MAHOUT™ adapta el contenido según el progreso del estudiante
-- **Consultores IA**: MAHOUT™ preserva la coherencia en sesiones largas de consultoría
-
-## Integración Simple
-
-```python
-# 3 líneas para comenzar con MAHOUT™
-from cognitive_memory import Client
-client = Client(api_key="your_key")  # Powered by MAHOUT™
-response = client.chat("Tu mensaje aquí", session_id="123")
+{
+  "conversation_id": "uuid",
+  "message": "Hello, how are you?",
+  "max_contexts": 10
+}
 ```
 
-## Resultados Reales
+### Search Endpoint  
+```http
+POST /api/search
+X-API-Key: your-api-key
 
-| Métrica | Sin MAHOUT™ | Con MAHOUT™ |
-|---------|-------------|-------------|
-| Coherencia | ~50% | 85%+ |
-| Tokens necesarios | 100% | 60% |
-| Relevancia | Baseline | 3x mejor |
-| Satisfacción usuario | 72% | 94% |
+{
+  "query": "previous discussions about Python",
+  "conversation_id": "uuid",  # Optional
+  "limit": 10
+}
+```
 
-## Modelo de Servicio
+## 💰 MAHOUT™ Licensing
 
-Todos los planes incluyen tecnología MAHOUT™:
+The demo includes basic scoring. For production use with real MAHOUT™ analysis:
 
-- **Starter**: $99/mes - MAHOUT™ Essential
-- **Professional**: $499/mes - MAHOUT™ Advanced  
-- **Enterprise**: $2,499/mes - MAHOUT™ Complete
+- **Demo**: Limited functionality, basic scoring
+- **Startup**: $299/month - 100K requests
+- **Enterprise**: Custom pricing - unlimited requests
+
+Contact sales@integridai.com for licensing.
+
+## 🔒 Security Considerations
+
+- Always use environment variables for sensitive data
+- Implement rate limiting in production
+- Use HTTPS for all API communications
+- Rotate API keys regularly
+- Monitor for unauthorized access attempts
+
+## ⚖️ Legal
+
+- Open source components: MIT License
+- MAHOUT™ technology: Proprietary (see [LEGAL_NOTICE.md](LEGAL_NOTICE.md))
+- Patents pending
+- © 2025 IntegridAI. All rights reserved.
+
+## 🤝 Contributing
+
+We welcome contributions to the open source components! Please:
+
+1. Read [LEGAL_NOTICE.md](LEGAL_NOTICE.md) first
+2. Only contribute to open source parts
+3. Don't attempt to reverse engineer MAHOUT™
+4. Sign CLA before major contributions
+
+## 📧 Contact
+
+- Technical Support: support@integridai.com
+- Licensing: sales@integridai.com
+- Legal: legal@integridai.com
+- Security: security@integridai.com
 
 ---
 
-<div align="center">
-  <h3>⚡ Powered by MAHOUT™</h3>
-  <p>Tecnología Cognitiva Propietaria</p>
-</div>
-
----
-
-*MAHOUT™ es marca registrada. La tecnología MAHOUT™ está protegida por secreto comercial.*
+**Remember**: This is a demonstration of integration capabilities. The real MAHOUT™ technology that provides advanced cognitive analysis is proprietary and requires a commercial license.

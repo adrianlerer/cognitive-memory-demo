@@ -1,5 +1,11 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 Rate Limiting y Control de Costos para Developer Trial
+Copyright (c) 2025 IntegridAI. All rights reserved.
+
+This file is part of the Cognitive Memory System.
+Licensed under MIT License for open source components.
 """
 from datetime import datetime, timedelta
 from typing import Dict, Optional
