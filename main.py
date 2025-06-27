@@ -307,19 +307,44 @@ async def chat(request: ChatRequest, x_api_key: str = Header(None)):
                     })
                     token_count += msg_tokens
         
-        # Call LLM (generic endpoint)
-        # In production, this would call your LLM of choice
-        # For demo, we'll return a simulated response
-        
-        assistant_response = f"""He analizado tu mensaje considerando el contexto de nuestra conversación. 
-
-Basándome en la información previa y los patrones detectados por el sistema MAHOUT, puedo mantener coherencia con nuestros temas anteriores.
-
-Tu mensaje: "{request.message}"
-
-[Respuesta contextualizada aquí - en producción, esto vendría del LLM real]
-
-*Cognitive Score: {cognitive_metrics.overall_score:.2%} (Relevancia: {cognitive_metrics.relevance_score:.2%}, Temporal: {cognitive_metrics.temporal_score:.2%})*"""
+        # Call LLM (OpenAI GPT)
+        if client:
+            # Build messages for GPT
+            messages = [
+                {"role": "system", "content": "Eres un asistente con memoria persistente. Tienes acceso a conversaciones anteriores y debes mantener coherencia con el contexto previo."},
+            ]
+            
+            # Add context from similar messages
+            if similar_messages:
+                context_summary = "Contexto relevante de conversaciones anteriores:\n"
+                for msg in similar_messages[:3]:
+                    context_summary += f"- {msg['content'][:100]}...\n"
+                messages.append({"role": "system", "content": context_summary})
+            
+            # Add recent conversation
+            for msg in context_messages:
+                messages.append(msg)
+            
+            # Add current message
+            messages.append({"role": "user", "content": request.message})
+            
+            try:
+                # Call OpenAI
+                response = await client.chat.completions.create(
+                    model="gpt-3.5-turbo",
+                    messages=messages,
+                    temperature=0.7,
+                    max_tokens=500
+                )
+                
+                assistant_response = response.choices[0].message.content
+                
+            except Exception as e:
+                print(f"Error calling OpenAI: {e}")
+                assistant_response = "Lo siento, hubo un error al procesar tu mensaje. Por favor intenta de nuevo."
+        else:
+            # Fallback if no OpenAI client
+            assistant_response = f"[Demo sin OpenAI] Recibí tu mensaje sobre '{request.message[:50]}...'. En producción, aquí vendría una respuesta real del LLM con contexto completo."
         
         # Store assistant response
         assistant_embedding = await get_embedding(assistant_response)
