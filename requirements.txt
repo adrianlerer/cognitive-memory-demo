@@ -8,6 +8,10 @@ uvicorn[standard]==0.24.0
 asyncpg==0.29.0
 # pgvector se instala como extensión de PostgreSQL, no como pip package
 
+# OpenAI Integration
+openai==1.35.3
+tiktoken==0.5.2
+
 # Async HTTP
 httpx==0.25.2
 
@@ -18,6 +22,7 @@ pydantic==2.5.2
 python-dotenv==1.0.0
 numpy==1.26.2
 tenacity==8.2.3
+python-multipart==0.0.6
 
 # Development
 pytest==7.4.3
