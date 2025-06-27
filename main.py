@@ -8,7 +8,7 @@ from uuid import uuid4
 
 import asyncpg
 import numpy as np
-import openai
+from openai import AsyncOpenAI
 import tiktoken
 from fastapi import FastAPI, HTTPException, Header, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -24,7 +24,7 @@ LLM_API_KEY = os.getenv("LLM_API_KEY")  # Generic LLM endpoint
 SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-change-in-production")
 
 # Initialize OpenAI
-openai.api_key = OPENAI_API_KEY
+client = AsyncOpenAI(api_key=OPENAI_API_KEY)
 
 # FastAPI app
 app = FastAPI(
@@ -171,9 +171,11 @@ async def init_db():
     
     async with db_pool.acquire() as conn:
         # Create tables
+        # Create extension
+        await conn.execute("CREATE EXTENSION IF NOT EXISTS vector")
+        
+        # Create messages table
         await conn.execute("""
-            CREATE EXTENSION IF NOT EXISTS vector;
-            
             CREATE TABLE IF NOT EXISTS messages (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 conversation_id UUID NOT NULL,
@@ -181,21 +183,27 @@ async def init_db():
                 content TEXT NOT NULL,
                 embedding vector(1536),
                 metadata JSONB,
-                created_at TIMESTAMPTZ DEFAULT NOW(),
-
-            );
-            
-            CREATE INDEX IF NOT EXISTS idx_conversation_id ON messages(conversation_id);
-            CREATE INDEX IF NOT EXISTS idx_created_at ON messages(created_at);
-            
+                created_at TIMESTAMPTZ DEFAULT NOW()
+            )
+        """)
+        
+        # Create indexes for messages
+        await conn.execute("CREATE INDEX IF NOT EXISTS idx_msg_conversation_id ON messages(conversation_id)")
+        await conn.execute("CREATE INDEX IF NOT EXISTS idx_msg_created_at ON messages(created_at)")
+        
+        # Create conversations table
+        await conn.execute("""
             CREATE TABLE IF NOT EXISTS conversations (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 user_id TEXT,
                 metadata JSONB,
                 created_at TIMESTAMPTZ DEFAULT NOW(),
                 updated_at TIMESTAMPTZ DEFAULT NOW()
-            );
-            
+            )
+        """)
+        
+        # Create metrics table
+        await conn.execute("""
             CREATE TABLE IF NOT EXISTS metrics (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 conversation_id UUID,
@@ -204,7 +212,7 @@ async def init_db():
                 temporal_score FLOAT,
                 pattern_score FLOAT,
                 created_at TIMESTAMPTZ DEFAULT NOW()
-            );
+            )
         """)
 
 @app.on_event("startup")
@@ -222,16 +230,16 @@ def count_tokens(text: str) -> int:
         return len(encoder.encode(text))
     except:
         # Fallback to approximation
-        return len(text.split()) * 1.3
+        return int(len(text.split()) * 1.3)
 
 @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10))
 async def get_embedding(text: str) -> List[float]:
     """Get embeddings with retry logic"""
-    response = await openai.Embedding.acreate(
+    response = await client.embeddings.create(
         input=text,
         model="text-embedding-3-small"
     )
-    return response['data'][0]['embedding']
+    return response.data[0].embedding
 
 async def search_similar_messages(
     embedding: List[float], 
@@ -249,7 +257,7 @@ async def search_similar_messages(
                 created_at,
                 1 - (embedding <=> $1::vector) as similarity
             FROM messages
-            WHERE conversation_id = $2
+            WHERE conversation_id = $2::UUID
             ORDER BY similarity DESC
             LIMIT $3
         """, embedding_str, conversation_id, limit)
@@ -262,7 +270,7 @@ async def get_recent_messages(conversation_id: str, limit: int = 5) -> List[Dict
         rows = await conn.fetch("""
             SELECT id, role, content, created_at, metadata
             FROM messages
-            WHERE conversation_id = $1
+            WHERE conversation_id = $1::UUID
             ORDER BY created_at DESC
             LIMIT $2
         """, conversation_id, limit)
@@ -292,7 +300,7 @@ async def chat(request: ChatRequest, x_api_key: str = Header(None)):
         async with db_pool.acquire() as conn:
             await conn.execute("""
                 INSERT INTO messages (conversation_id, role, content, embedding)
-                VALUES ($1, $2, $3, $4)
+                VALUES ($1::UUID, $2, $3, $4)
             """, request.conversation_id, "user", request.message, embedding)
         
         # Get recent messages
@@ -357,7 +365,7 @@ Tu mensaje: "{request.message}"
         async with db_pool.acquire() as conn:
             await conn.execute("""
                 INSERT INTO messages (conversation_id, role, content, embedding)
-                VALUES ($1, $2, $3, $4)
+                VALUES ($1::UUID, $2, $3, $4)
             """, request.conversation_id, "assistant", assistant_response, assistant_embedding)
             
             # Store metrics
@@ -365,7 +373,7 @@ Tu mensaje: "{request.message}"
                 INSERT INTO metrics (
                     conversation_id, cognitive_score, relevance_score, 
                     temporal_score, pattern_score
-                ) VALUES ($1, $2, $3, $4, $5)
+                ) VALUES ($1::UUID, $2, $3, $4, $5)
             """, request.conversation_id, cognitive_metrics.overall_score,
                 cognitive_metrics.relevance_score, cognitive_metrics.temporal_score,
                 cognitive_metrics.pattern_score)
@@ -408,7 +416,7 @@ async def search(request: SearchRequest, x_api_key: str = Header(None)):
                         created_at,
                         1 - (embedding <=> $1::vector) as similarity
                     FROM messages
-                    WHERE conversation_id = $2
+                    WHERE conversation_id = $2::UUID
                     ORDER BY similarity DESC
                     LIMIT $3
                 """, embedding_str, request.conversation_id, request.limit)
@@ -420,7 +428,7 @@ async def search(request: SearchRequest, x_api_key: str = Header(None)):
                         1 - (embedding <=> $1::vector) as similarity
                     FROM messages
                     ORDER BY similarity DESC
-                    LIMIT $1
+                    LIMIT $2
                 """, embedding_str, request.limit)
         
         results = []
@@ -456,10 +464,10 @@ async def get_messages(conversation_id: str, limit: int = 50, x_api_key: str = H
             rows = await conn.fetch("""
                 SELECT id, role, content, created_at, metadata
                 FROM messages
-                WHERE conversation_id = $1
+                WHERE conversation_id = $1::UUID
                 ORDER BY created_at DESC
                 LIMIT $2
-            """, conversation_id, limit)
+                """, conversation_id, limit)
         
         messages = []
         for row in reversed(rows):
