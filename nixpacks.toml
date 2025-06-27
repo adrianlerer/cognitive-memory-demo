@@ -1,0 +1,7 @@
+{
+  "build": {
+    "env": {
+      "NIXPACKS_PYTHON_PACKAGES": "openai tiktoken"
+    }
+  }
+}
