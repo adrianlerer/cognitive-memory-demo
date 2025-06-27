@@ -8,23 +8,25 @@ RUN apt-get update && apt-get install -y \
     postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
+# Copy requirements first for better caching
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+
+# Install Python dependencies explicitly
+RUN pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir openai tiktoken
 
 # Copy application code
 COPY . .
+
+# Make start script executable
+RUN chmod +x start.sh
 
 # Create non-root user
 RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
 USER appuser
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=40s \
-    CMD python -c "import httpx; httpx.get('http://localhost:8000/health').raise_for_status()"
-
 # Expose port
 EXPOSE 8000
 
-# Run application
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Use the start script
+CMD ["./start.sh"]
