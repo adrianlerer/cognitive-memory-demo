@@ -24,7 +24,10 @@ LLM_API_KEY = os.getenv("LLM_API_KEY")  # Generic LLM endpoint
 SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-change-in-production")
 
 # Initialize OpenAI
-client = AsyncOpenAI(api_key=OPENAI_API_KEY)
+if OPENAI_API_KEY:
+    client = AsyncOpenAI(api_key=OPENAI_API_KEY)
+else:
+    client = None
 
 # FastAPI app
 app = FastAPI(
@@ -46,7 +49,10 @@ app.add_middleware(
 db_pool = None
 
 # Tiktoken encoder for accurate token counting
-encoder = tiktoken.encoding_for_model("gpt-3.5-turbo")
+try:
+    encoder = tiktoken.encoding_for_model("gpt-3.5-turbo")
+except:
+    encoder = None
 
 # Models
 class ChatRequest(BaseModel):
@@ -233,11 +239,13 @@ async def shutdown():
 # Helper functions
 def count_tokens(text: str) -> int:
     """Count tokens accurately using tiktoken"""
-    try:
-        return len(encoder.encode(text))
-    except:
-        # Fallback to approximation
-        return int(len(text.split()) * 1.3)
+    if encoder:
+        try:
+            return len(encoder.encode(text))
+        except:
+            pass
+    # Fallback to approximation
+    return int(len(text.split()) * 1.3)
 
 @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10))
 async def get_embedding(text: str) -> List[float]:
@@ -399,6 +407,13 @@ Tu mensaje: "{request.message}"
         }
         
     except Exception as e:
+        print(f"Error in /api/chat endpoint: {str(e)}")
+        # If DB not initialized, suggest initialization
+        if "relation \"messages\" does not exist" in str(e):
+            raise HTTPException(
+                status_code=503, 
+                detail="Database not initialized. Please run initialization first."
+            )
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/search")
@@ -636,6 +651,18 @@ async def test():
         "powered_by": "MAHOUT™",
         "note": "Database initialization pending..."
     }
+
+@app.post("/api/init-db")
+async def initialize_database(x_api_key: str = Header(None)):
+    """Initialize database tables"""
+    if not x_api_key or x_api_key != "demo-key":
+        raise HTTPException(status_code=401, detail="Invalid API key")
+    
+    try:
+        await init_db()
+        return {"status": "success", "message": "Database initialized successfully"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
 # Run the application
 if __name__ == "__main__":
