@@ -182,9 +182,11 @@ async def init_db():
                 embedding vector(1536),
                 metadata JSONB,
                 created_at TIMESTAMPTZ DEFAULT NOW(),
-                INDEX idx_conversation_id (conversation_id),
-                INDEX idx_created_at (created_at)
+
             );
+            
+            CREATE INDEX IF NOT EXISTS idx_conversation_id ON messages(conversation_id);
+            CREATE INDEX IF NOT EXISTS idx_created_at ON messages(created_at);
             
             CREATE TABLE IF NOT EXISTS conversations (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
