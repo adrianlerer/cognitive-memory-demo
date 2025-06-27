@@ -3,8 +3,9 @@
 mahout_core.py
 mahout_algorithms.py
 mahout_implementation.py
-mahout_*.py
-!mahout_protected.py  # This is the safe interface
+mahout_real.py
+mahout_secret*.py
+# mahout_protected.py is allowed - it's the safe interface
 proprietary/
 algorithms/
 trade_secrets/
