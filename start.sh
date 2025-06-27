@@ -1,6 +1,5 @@
 #!/bin/sh
 echo "Starting Cognitive Memory System..."
-echo "Installing dependencies..."
-pip install openai tiktoken tenacity fastapi uvicorn asyncpg numpy pydantic python-multipart httpx python-dotenv
-echo "Dependencies installed. Starting server..."
+echo "Port: ${PORT:-8000}"
+echo "Database URL configured: ${DATABASE_URL:0:30}..."
 python -m uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}
