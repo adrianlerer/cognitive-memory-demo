@@ -28,7 +28,7 @@ class MAHOUTProtected:
     
     # Version tracking for legal protection
     VERSION = "1.0.0-protected"
-    COPYRIGHT = "Copyright (c) 2025 IntegridAI. Patent Pending."
+    COPYRIGHT = "Copyright (c) 2025 IntegridAI. Patents Pending."
     
     @staticmethod
     def _validate_license(api_key: str) -> bool:

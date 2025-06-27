@@ -19,12 +19,12 @@ This repository contains INTERFACES to proprietary MAHOUT™ technology owned by
 
 ## Intellectual Property Notice
 
-MAHOUT™ is a trademark of IntegridAI. Patent pending.
+MAHOUT™ is a trademark of IntegridAI. Patents pending.
 
 The algorithms, methodologies, and implementations of the MAHOUT™ Cognitive Analysis Engine are proprietary and confidential. They are NOT included in this repository and are protected by:
 
 1. **Trade Secret Protection**: The MAHOUT algorithms are trade secrets
-2. **Patent Protection**: Patent application filed (pending)
+2. **Patent Protection**: Multiple patent applications filed (pending)
 3. **Copyright Protection**: All code and documentation © 2025 IntegridAI
 4. **Contractual Protection**: Access requires signed license agreement
 

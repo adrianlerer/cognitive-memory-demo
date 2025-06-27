@@ -120,7 +120,7 @@ Contact sales@integridai.com for licensing.
 
 - Open source components: MIT License
 - MAHOUT™ technology: Proprietary (see [LEGAL_NOTICE.md](LEGAL_NOTICE.md))
-- Patents pending
+- Patents pending (6 applications filed)
 - © 2025 IntegridAI. All rights reserved.
 
 ## 🤝 Contributing
